@@ -57,7 +57,7 @@ def game_for_testing(p_bob):
 @pytest.fixture
 def card_dict():
     my_list = ["Copper", "Silver", "Gold", "Estate", "Duchy", "Providence"]
-f    my_dict = {}
+    my_dict = {}
     for _ in my_list:
         my_dict[_] = BasicGame.Card(_)
     return my_dict
@@ -148,13 +148,14 @@ def test_cards_exist():
 # I have a lot of cleaning up to do later... yeah... BUT I will get more important things
 # working FIRST!
 
-
+# -------------------------------------------------------
 def test_game_deck():
     """
     The CURRENT Basic Setup of the game!
     I will change this later!
     """
-    local_game = BasicGame.MyGame()
+    selection = BasicGame.selection_deck()
+    local_game = BasicGame.MyGame(selection)
     assert len(local_game.decks["Copper"]) > 0
     assert len(local_game.discard) == 0
     assert local_game.players[0].name == "Bob"
@@ -162,6 +163,7 @@ def test_game_deck():
     assert len(local_game.players[0].hand) == 0
 
 
+# -------------------------------------------------------
 def test_player_score_actions(p_bob):
     p_bob.increase_score(5)
     assert p_bob.score == 5
@@ -169,6 +171,7 @@ def test_player_score_actions(p_bob):
     assert p_bob.score == 0
 
 
+# -------------------------------------------------------
 def test_player_card_movements(p_bob):
     """
     Testing all of the card movements that should be allowed by a player.
@@ -206,7 +209,7 @@ def test_player_card_movements(p_bob):
     assert len(p_bob.deck) == 9
     assert len(p_bob.discard) == 1
     assert len(p_bob.play_area["cards"]) == 0
-    my_game = BasicGame.MyGame([BasicGame.Card("Cellar")],[p_bob])
+    my_game = BasicGame.MyGame([BasicGame.Card("Cellar")], [p_bob])
     p_bob.gain_card("Copper")
     assert len(p_bob.hand) == 0
     assert len(p_bob.deck) == 9
@@ -220,6 +223,7 @@ def test_player_card_movements(p_bob):
     assert len(p_bob.play_area["cards"]) == 0
 
 
+# -------------------------------------------------------
 def test_overdraw_card_movements(capsys, p_bob):
     """
     TODO - NEED TO ADD CHECKING FOR Overdrawing each type! ETC!
@@ -241,6 +245,7 @@ def test_overdraw_card_movements(capsys, p_bob):
     # assert exc_info.value.args[0] == "pop from empty list"
 
 
+# -------------------------------------------------------
 def test_player_card_shuffling(p_bob):
     p_bob.create_deck()
     my_deck = p_bob.deck.copy()
@@ -248,6 +253,7 @@ def test_player_card_shuffling(p_bob):
     assert my_deck != p_bob.deck
 
 
+# -------------------------------------------------------
 def test_setting_up_the_cards_on_the_board(game_for_testing):
     assert game_for_testing.game_board.name == "Game"
     assert len(game_for_testing.decks["Copper"]) == 60
@@ -260,6 +266,7 @@ def test_setting_up_the_cards_on_the_board(game_for_testing):
     assert len(game_for_testing.decks["Trash"]) == 0
 
 
+# -------------------------------------------------------
 def test_active_player(p_bob, p_chris):
     my_game = BasicGame.MyGame([BasicGame.Card("Church")], [p_bob, p_chris])
     assert my_game.players[0].is_active_player
@@ -272,11 +279,13 @@ def test_active_player(p_bob, p_chris):
     assert my_game.players[0].buys == 1
 
 
+# -------------------------------------------------------
 def test_player_game_attaches(p_bob, p_chris):
     my_game = BasicGame.MyGame([BasicGame.Card("Church")], [p_bob, p_chris])
     assert my_game.players[0].game == my_game
 
 
+# -------------------------------------------------------
 def test_players_buys(p_bob, p_chris):
     """
     I have to actually add costs to continue this...
@@ -286,6 +295,7 @@ def test_players_buys(p_bob, p_chris):
     my_game.players[0].buy_card(BasicGame.Card("Church"))
 
 
+# -------------------------------------------------------
 def test_different_cards():
     my_game = BasicGame.MyGame()
     chosen_cards = 10
@@ -297,6 +307,7 @@ def test_different_cards():
     assert len(my_game.decks) == sum_of_cards
 
 
+# -------------------------------------------------------
 def test_write_more_tests():
     """
     What does my Minimum Viable Product look like?
@@ -309,4 +320,3 @@ def test_write_more_tests():
     TODO - Check the type of all cards throughout to make sure they are all of type Cards?
     """
     assert False
-

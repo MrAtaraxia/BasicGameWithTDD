@@ -23,16 +23,20 @@ class Card:
     """
 
     def __new__(cls, *args, **kwargs):
+        """
+        WHY DO I HAVE THIS? IDK... It seemed interesting at the time!
+        """
         instance = super().__new__(cls)
         return instance
 
     def __init__(self, name: str, card_type: str = None, cost: int = 1,
-                 action: str = None, description: str = None):
+                 action: str = None, description: str = None, value: int = 0):
         self.name = name
         self.cost = cost
         self.type = card_type
         self.description = description
         self.action = action
+        self.value = value
 
     def __eq__(self, other):
         return str(self) == str(other)
@@ -75,9 +79,12 @@ class Player:
         self.score -= amount
 
     def create_deck(self) -> None:
-        self.cards.extend(["Copper", "Copper", "Copper", "Copper",
-                           "Copper", "Copper", "Copper", "Estate",
-                           "Estate", "Estate"])
+        if self.game:
+            self.cards.extend([self.game.decks["Copper"] for _ in range(7)])
+            self.cards.extend([self.game.decks["Estate"] for _ in range(3)])
+        else:
+            self.cards.extend([Card("Copper", "Treasure", 0, None, None, 1)] for _ in range(7))
+            self.cards.extend([Card("Estate", "Victory", 2, )] for _ in range(3))
         self.deck.extend(self.cards)
 
     def draw_cards(self, number) -> None:
@@ -170,16 +177,63 @@ class MyGame:
         if card_choices:
             self.card_choices = card_choices
         else:
-            self.card_choices = [Card("Explorer", "Action"),
-                                 Card("Moat", "Reaction"),
-                                 Card("Thief", "Action-Attack"),
-                                 Card("Duke", "Action-Victory"),
-                                 Card("Torturer", "Action-Attack"),
-                                 Card("Card1", "Action"),
-                                 Card("Card2", "Action"),
-                                 Card("Card3", "Action"),
-                                 Card("Card4", "Action"),
-                                 Card("Card5", "Action")]
+            self.card_choices = [Card("Cellar", "Action", 2, None,
+                                      """
+                                      +1 Actions
+                                      Discard any number of cards.
+                                      +1 Card per card discarded.
+                                      """),
+                                 Card("Chapel", "Action", 2, None,
+                                      """
+                                      Trash up to 4 cards from your hand.
+                                      """),
+                                 Card("Moat", "Action - Reaction", 2, None,
+                                      """
+                                      +2 Cards
+                                      ---
+                                      When another player plays an Attack
+                                      card, you may reveal this card from your 
+                                      hand. If you do, you are unaffected
+                                      by the attack.
+                                      """),
+                                 Card("Chancellor", "Action", 3, None,
+                                      """
+                                      +2 Gold
+                                      You may immediately put your 
+                                      deck into your discard pile.
+                                      """),
+                                 Card("Village", "Action", 3, None,
+                                      """
+                                      +1 Card
+                                      +2 Actions
+                                      """),
+                                 Card("Woodcutter", "Action", 3, None,
+                                      """
+                                      +1 Buy
+                                      +2 Coins
+                                      """),
+                                 Card("Feast", "Action", 4, None,
+                                      """
+                                      Trash this card.
+                                      Gain a card costing up to 5.
+                                      """),
+                                 Card("Militia", "Action - Attack", 4, None,
+                                      """
+                                      +2 Coins
+                                      Each other player discards
+                                      down to 3 cards in his hand.
+                                      """),
+                                 Card("Moneylender", "Action", 4, None,
+                                      """
+                                      Trash a Copper from your hand.
+                                      If you do +3 Coins.
+                                      """),
+                                 Card("Remodel", "Action", 4, None,
+                                      """
+                                      Trash a card from your hand.
+                                      Gain a card costing up to 2 Coins more
+                                      than the trashed card. 
+                                      """)]
         self.first_player = 0
         self.active_player = self.first_player
         self.decks = self.setup_decks(self.card_choices)
@@ -202,13 +256,13 @@ class MyGame:
 
     @staticmethod
     def setup_decks(card_choices):
-        current_deck = {"Copper": [Card("Copper", "Treasure") for _ in range(60)],
-                        "Silver": [Card("Silver", "Treasure") for _ in range(60)],
-                        "Gold": [Card("Gold", "Treasure") for _ in range(60)],
-                        "Estate": [Card("Estate", "Victory") for _ in range(12)],
-                        "Duchy": [Card("Duchy", "Victory") for _ in range(12)],
-                        "Providence": [Card("Providence", "Victory") for _ in range(12)],
-                        "Curse": [Card("Curse", "Curse") for _ in range(10)],
+        current_deck = {"Copper": [Card("Copper", "Treasure", 0) for _ in range(60)],
+                        "Silver": [Card("Silver", "Treasure", 3) for _ in range(60)],
+                        "Gold": [Card("Gold", "Treasure", 6) for _ in range(60)],
+                        "Estate": [Card("Estate", "Victory", 2) for _ in range(12)],
+                        "Duchy": [Card("Duchy", "Victory", 5) for _ in range(12)],
+                        "Providence": [Card("Providence", "Victory", 8) for _ in range(12)],
+                        "Curse": [Card("Curse", "Curse", 0) for _ in range(10)],
                         "Trash": []}
         for cards in card_choices:
             current_deck[str(cards)] = [cards for _ in range(10)]
@@ -235,8 +289,70 @@ def my_method(s):
     return s
 
 
+def selection_deck():
+    base_game = [Card("Cellar", "Action", 2, None,
+                      """
+                      +1 Actions
+                      Discard any number of cards.
+                      +1 Card per card discarded.
+                      """),
+                 Card("Chapel", "Action", 2, None,
+                      """
+                      Trash up to 4 cards from your hand.
+                      """),
+                 Card("Moat", "Action - Reaction", 2, None,
+                      """
+                      +2 Cards
+                      ---
+                      When another player plays an Attack
+                      card, you may reveal this card from your 
+                      hand. If you do, you are unaffected
+                      by the attack.
+                      """),
+                 Card("Chancellor", "Action", 3, None,
+                      """
+                      +2 Gold
+                      You may immediately put your 
+                      deck into your discard pile.
+                      """),
+                 Card("Village", "Action", 3, None,
+                      """
+                      +1 Card
+                      +2 Actions
+                      """),
+                 Card("Woodcutter", "Action", 3, None,
+                      """
+                      +1 Buy
+                      +2 Coins
+                      """),
+                 Card("Feast", "Action", 4, None,
+                      """
+                      Trash this card.
+                      Gain a card costing up to 5.
+                      """),
+                 Card("Militia", "Action - Attack", 4, None,
+                      """
+                      +2 Coins
+                      Each other player discards
+                      down to 3 cards in his hand.
+                      """),
+                 Card("Moneylender", "Action", 4, None,
+                      """
+                      Trash a Copper from your hand.
+                      If you do +3 Coins.
+                      """),
+                 Card("Remodel", "Action", 4, None,
+                      """
+                      Trash a card from your hand.
+                      Gain a card costing up to 2 Coins more
+                      than the trashed card. 
+                      """)]
+    return base_game
+
+
 def main():
-    my_board = MyGame()
+    my_choices = selection_deck()
+    my_board = MyGame(my_choices)
     print(my_board.players[0].number)
     print(my_board.decks)
     print(my_board.discard)
