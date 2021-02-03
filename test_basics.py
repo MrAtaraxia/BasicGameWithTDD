@@ -50,7 +50,7 @@ def game_for_testing(p_bob):
     while using this or not... hmmm...
     I will have to look into that more later.
     """
-    game = BasicGame.MyGame([BasicGame.Card("Bridge")], [p_bob])
+    game = BasicGame.MyGame(["Bridge"], [p_bob])
     return game
 
 
@@ -58,9 +58,17 @@ def game_for_testing(p_bob):
 def card_dict():
     my_list = ["Copper", "Silver", "Gold", "Estate", "Duchy", "Providence"]
     my_dict = {}
-    for _ in my_list:
-        my_dict[_] = BasicGame.Card(_)
+    my_select = BasicGame.selection_deck()
+    for _ in my_select:
+        if _.name in my_list:
+            my_dict[_.name] = _
     return my_dict
+
+
+@pytest.fixture
+def cop_fixture():
+    my_card = BasicGame.Card("Copper", "Treasure", 0, value=1)
+    return my_card
 
 
 def test_errors():
@@ -73,18 +81,18 @@ def test_errors():
     assert exc_info.value.args[0] == "value must be 42"
 
 
-def test_a_player_exist(p_bob):
+def test_a_player_exist(p_bob, cop_fixture):
     """A Test to see if the player module works together with the the pytest fixture."""
     my_player = BasicGame.Player(10, "bob", "red")
-    my_player.hand.append(BasicGame.Card("Copper"))
+    my_player.hand.append(cop_fixture)
     assert my_player == p_bob
     p_bob.hand.append("Copper")
     assert len(p_bob.hand) > 0
     assert p_bob.hand[0] == "Copper"
     assert my_player.number == 10
     assert my_player.color == "red"
-    assert BasicGame.Card("Copper").name in p_bob.hand
-    assert BasicGame.Card("Copper") in p_bob.hand
+    assert cop_fixture.name in p_bob.hand
+    assert cop_fixture in p_bob.hand
 
 
 def test_a_game_exists():
@@ -92,16 +100,16 @@ def test_a_game_exists():
     A Test to check if the MyGame works as intended.
     :return: None
     """
-    my_game = BasicGame.MyGame([BasicGame.Card("Bridge")], [BasicGame.Player(10)])
+    my_game = BasicGame.MyGame(["Bridge"], [BasicGame.Player(10)])
     assert my_game.players[0].name is None
     assert my_game.game_board.name == "Game"
 
 
 # DONE - Added cards.
 
-def test_cards_exist():
+def test_cards_exist(cop_fixture):
     """ Test to make su that the cards are callable."""
-    my_card = BasicGame.Card("Copper")
+    my_card = cop_fixture
     assert my_card.name == "Copper"
 
 
@@ -188,6 +196,9 @@ def test_player_card_movements(p_bob):
     assert len(p_bob.deck) == 10
     assert len(p_bob.hand) == 0
     p_bob.draw_cards(2)
+    print(p_bob.hand)
+    print(p_bob.deck)
+
     assert len(p_bob.hand) == 2
     assert len(p_bob.deck) == 8
     assert len(p_bob.discard) == 0
@@ -199,28 +210,33 @@ def test_player_card_movements(p_bob):
     assert len(p_bob.hand) == 1
     assert len(p_bob.deck) == 9
     assert len(p_bob.discard) == 0
-    p_bob.play_card(0)  # Card # not # of cards
-    assert len(p_bob.hand) == 0
+    my_game = BasicGame.MyGame([], [p_bob])
+    p_bob.gain_card("Cellar", "hand")
+    p_bob.play_card(1)  # Card # not # of cards
+    with pytest.raises(AttributeError) as exc_info:
+        p_bob.play_card(0)  # Card # not # of cards
+    assert exc_info.type is AttributeError
+    assert len(p_bob.hand) == 1
     assert len(p_bob.deck) == 9
     assert len(p_bob.discard) == 0
     assert len(p_bob.play_area["cards"]) == 1
     p_bob.clean_up()
-    assert len(p_bob.hand) == 0
+    assert len(p_bob.hand) == 1
     assert len(p_bob.deck) == 9
     assert len(p_bob.discard) == 1
     assert len(p_bob.play_area["cards"]) == 0
-    my_game = BasicGame.MyGame([BasicGame.Card("Cellar")], [p_bob])
-    p_bob.gain_card("Copper")
+    p_bob.discard_cards(1)
     assert len(p_bob.hand) == 0
     assert len(p_bob.deck) == 9
     assert len(p_bob.discard) == 2
     assert len(p_bob.play_area["cards"]) == 0
     p_bob.draw_cards(1)
-    p_bob.trash_card()
+    p_bob.trash_card(0)
     assert len(p_bob.hand) == 0
     assert len(p_bob.deck) == 8
     assert len(p_bob.discard) == 2
     assert len(p_bob.play_area["cards"]) == 0
+    assert len(my_game.decks["Trash"]) == 1
 
 
 # -------------------------------------------------------
@@ -268,7 +284,7 @@ def test_setting_up_the_cards_on_the_board(game_for_testing):
 
 # -------------------------------------------------------
 def test_active_player(p_bob, p_chris):
-    my_game = BasicGame.MyGame([BasicGame.Card("Church")], [p_bob, p_chris])
+    my_game = BasicGame.MyGame(["Church"], [p_bob, p_chris])
     assert my_game.players[0].is_active_player
     my_game.next_player()
     assert my_game.players[1].is_active_player
@@ -281,7 +297,7 @@ def test_active_player(p_bob, p_chris):
 
 # -------------------------------------------------------
 def test_player_game_attaches(p_bob, p_chris):
-    my_game = BasicGame.MyGame([BasicGame.Card("Church")], [p_bob, p_chris])
+    my_game = BasicGame.MyGame(["Church"], [p_bob, p_chris])
     assert my_game.players[0].game == my_game
 
 
@@ -290,9 +306,13 @@ def test_players_buys(p_bob, p_chris):
     """
     I have to actually add costs to continue this...
     That is going to be a bit of a thing.
+    THIS SHOULD NOT WORK...
     """
-    my_game = BasicGame.MyGame([BasicGame.Card("Church")], [p_bob, p_chris])
-    my_game.players[0].buy_card(BasicGame.Card("Church"))
+    my_game = BasicGame.MyGame(["Church"], [p_bob, p_chris])
+    with pytest.raises(ValueError) as exc_info:
+        my_game.players[0].buy_card(BasicGame.Card("Church", "Action"))
+    assert exc_info.type == ValueError
+    assert exc_info.value.args[0] == "You do not have enough coins to buy that card!"
 
 
 # -------------------------------------------------------
@@ -304,7 +324,22 @@ def test_different_cards():
     curse_cards = 1
     trash_card = 1
     sum_of_cards = chosen_cards + vp_cards + treasure_cards + curse_cards + trash_card
+    print(my_game.decks)
+    print(my_game.card_choices)
     assert len(my_game.decks) == sum_of_cards
+
+
+# -------------------------------------------------------
+def test_basic_player_graphic():
+    my_game = BasicGame.MyGame()
+    my_game.players[0].create_deck()
+    assert "Copper" in my_game.display_player(0)
+
+
+# -------------------------------------------------------
+def test_basic_board_graphic():
+    my_game = BasicGame.MyGame()
+    assert "Copper" in my_game.display_board()
 
 
 # -------------------------------------------------------

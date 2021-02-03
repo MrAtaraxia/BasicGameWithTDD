@@ -7,7 +7,10 @@
     - [x] Implement a basic game class.
     - [x] Add the general cards to the game.
     - [x] Implement all card movements for a player.
-      - [ ] Have them properly interact with the board.
+      - [X] Have them properly interact with the board.
+      - I think this is done.
+      But, in doing this I realized that... all of my cards that are associated with the player are 
+        inside lists themselves while the cards on the board are not. This will probably upset me later!
    - [ ] Have the game properly label where things are?
      - [ ] AKA which cards are in where?
     - [ ] Implement displaying the players.
@@ -15,6 +18,7 @@
     - [ ] Implement displaying the board.
       - How do I want to do this?
     - [ ] Implement the set up of the game.
+      - [ ] Implement things that require comparison of number of players. ex Curse count.
       - Basic goal, get the game to a point where it is 'starting'.
     - [ ] Implement player turns.
       - [ ] Implement the parts of the turn.
