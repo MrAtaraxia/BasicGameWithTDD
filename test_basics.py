@@ -43,14 +43,14 @@ def p_chris():
 
 
 @pytest.fixture
-def game_for_testing(p_bob):
+def game_for_testing(p_bob, p_chris):
     """
     Ok So this will be used as a general game thing.
     Would bob be modifiable from p_bob
     while using this or not... hmmm...
     I will have to look into that more later.
     """
-    game = BasicGame.MyGame(["Bridge"], [p_bob])
+    game = BasicGame.MyGame(["Bridge"], [p_bob, p_chris])
     return game
 
 
@@ -60,8 +60,8 @@ def card_dict():
     my_dict = {}
     my_select = BasicGame.selection_deck()
     for _ in my_select:
-        if _.name in my_list:
-            my_dict[_.name] = _
+        if _[0].name in my_list:
+            my_dict[_[0].name] = _
     return my_dict
 
 
@@ -165,7 +165,7 @@ def test_game_deck():
     selection = BasicGame.selection_deck()
     local_game = BasicGame.MyGame(selection)
     assert len(local_game.decks["Copper"]) > 0
-    assert len(local_game.discard) == 0
+    assert len(local_game.decks["Trash"][1]) == 0
     assert local_game.players[0].name == "Bob"
     assert local_game.players[0].color == "Red"
     assert len(local_game.players[0].hand) == 0
@@ -236,7 +236,7 @@ def test_player_card_movements(p_bob):
     assert len(p_bob.deck) == 8
     assert len(p_bob.discard) == 2
     assert len(p_bob.play_area["cards"]) == 0
-    assert len(my_game.decks["Trash"]) == 1
+    assert len(my_game.decks["Trash"][1]) == 1
 
 
 # -------------------------------------------------------
@@ -244,14 +244,25 @@ def test_overdraw_card_movements(capsys, p_bob):
     """
     TODO - NEED TO ADD CHECKING FOR Overdrawing each type! ETC!
     TODO - Overdrawing Deck
+    # Might get rid of overdrawing deck error.
+    That is because you CAN do that in the game.
+    and it should instead reshuffle the discard into the deck, after you draw all in the deck,
+    and then draw from those cards.
+    If those are not enough you just don't get any more cards. There is no error.
+    Might change the function to that.
     TODO - Overdrawing Hand
+    # Might adjust this one too. As you can try and discard a card, if it tells you to, when your hand is empty
+    so I am not sure how I want to handle this one in the future either.
     TODO - Error handling for - Discarding from an empty hand
+    Discarding from empty hand should just discard nothing... so hmm...
+    Oh I could adjust discard cards to, if blank do all?
+    Lets try that.
     TODO - Error handling for - Playing from an empty hand
     """
     p_bob.draw_cards(1)
     assert capsys.readouterr().out == "You can not draw a card from an empty deck.\n"
-    p_bob.discard_cards(1)
-    assert capsys.readouterr().out == "You can not discard a card from an empty hand.\n"
+    #p_bob.discard_cards()
+    #assert capsys.readouterr().out == "You can not discard a card from an empty hand.\n"
     p_bob.play_card(0)
     assert capsys.readouterr().out == "You can not play a card from an empty hand.\n"
     assert len(p_bob.play_area["cards"]) == 0
@@ -272,14 +283,14 @@ def test_player_card_shuffling(p_bob):
 # -------------------------------------------------------
 def test_setting_up_the_cards_on_the_board(game_for_testing):
     assert game_for_testing.game_board.name == "Game"
-    assert len(game_for_testing.decks["Copper"]) == 60
-    assert len(game_for_testing.decks["Silver"]) == 60
-    assert len(game_for_testing.decks["Gold"]) == 60
-    assert len(game_for_testing.decks["Estate"]) == 12
-    assert len(game_for_testing.decks["Duchy"]) == 12
-    assert len(game_for_testing.decks["Providence"]) == 12
-    assert len(game_for_testing.decks["Curse"]) == 10
-    assert len(game_for_testing.decks["Trash"]) == 0
+    assert len(game_for_testing.decks["Copper"][1]) == 60
+    assert len(game_for_testing.decks["Silver"][1]) == 40
+    assert len(game_for_testing.decks["Gold"][1]) == 30
+    assert len(game_for_testing.decks["Estate"][1]) == 12
+    assert len(game_for_testing.decks["Duchy"][1]) == 12
+    assert len(game_for_testing.decks["Providence"][1]) == 12
+    assert len(game_for_testing.decks["Curse"][1]) == 10
+    assert len(game_for_testing.decks["Trash"][1]) == 0
 
 
 # -------------------------------------------------------
@@ -343,6 +354,12 @@ def test_basic_board_graphic():
 
 
 # -------------------------------------------------------
+def test_basic_game_log():
+    my_game = BasicGame.MyGame()
+    assert "Game Start" in my_game.display_log()
+
+
+# -------------------------------------------------------
 def test_write_more_tests():
     """
     What does my Minimum Viable Product look like?
@@ -351,7 +368,11 @@ def test_write_more_tests():
 
     A Test to make it fail because there are need for more tests!
     :return: None
-    TODO - NEED TO SET it so GAME gives the starting cards, not the player!
+    Done - NEED TO SET it so GAME gives the starting cards, not the player!
+    Not doing that! I looked at the rules and if the players are not playing those cards are not included
+    So there is 'technically' no reason to give them to the game.
+    It COULD allow me to have an easier time managing where cards are, but I will look into that later,
+    If I even decide that I WANT that later.
     TODO - Check the type of all cards throughout to make sure they are all of type Cards?
     """
     assert False
