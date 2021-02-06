@@ -21,6 +21,7 @@ def main():
     last_sent = now
     while True:
         now = datetime.datetime.now()
+        my_time = f"{now.year:04}-{now.month:02}-{now.day:02}_{now.hour:02}-{now.minute:02}-{now.second:02}"
         if now.hour > last_sent.hour or (last_sent.hour == 23 and now.hour == 0):
             os.system(my_commands)
             last_sent = now
