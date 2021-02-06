@@ -70,6 +70,23 @@ Or NEED to have a desired number of tomatoes done at the end of the week.
 How will I want to enforce that? IDK...
 
 
+2021.02.06 So
+Current situation is that I broke graveyard.
+I broke it because it SHOULD allow the player to decide afterwards how they want to organize things
+but I forgot to fix that in different places.
+SO that is what I will work on first.
+We will ALSO see if gitting actually works on the hour change.
+Let us see...
+
+And I broke cleanup...
+yeah.
+because in an ACTUAL clean up
+you would discard your hand and draw new cards.
+SO yes that IS correct.
+
+added attributes draw_size and hand_limit to Player
+so I can have better control over how much they draw / if they draw too much.
+
 
 """
 
@@ -302,9 +319,9 @@ def test_player_card_movements(p_bob, p_chris, p_ted):
     assert len(p_bob.graveyard) == 0
     assert len(p_bob.play_area["cards"]) == 1
     p_bob.clean_up()
-    assert len(p_bob.hand) == 1
+    assert len(p_bob.hand) == 0
     assert len(p_bob.deck) == 9
-    assert len(p_bob.graveyard) == 1
+    assert len(p_bob.graveyard) == 2
     assert len(p_bob.play_area["cards"]) == 0
     p_bob.discard_cards(1)
     assert len(p_bob.hand) == 0

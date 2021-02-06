@@ -199,6 +199,8 @@ class Player:
         self.name = player_name
         self.color = color
         self.score = 0
+        self.draw_size = 5
+        self.hand_limit = 25
         self.pronoun = pronoun
         if self.pronoun == "he":
             self.owner_pronoun = "his"
@@ -279,6 +281,7 @@ class Player:
             number = len(self.hand)
         for _ in range(number):
             self.discards.append(self.hand.pop(0))
+        self.discards_to_graveyard()
 
     def discard_to_deck(self) -> None:
         """
@@ -469,6 +472,7 @@ class MyGame:
                 player.buys = 0
                 player.coins = 0
                 player.clean_up()
+                player.draw_cards(player.draw_size)
                 self.game_log.append(f"""{player.name} turn has ended.""")
 
     def next_player(self) -> None:
