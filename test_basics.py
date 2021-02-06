@@ -338,6 +338,21 @@ def test_player_card_movements(p_bob, p_chris, p_ted):
 
 
 # -------------------------------------------------------
+def test_basic_game_round(p_bob, p_chris, p_ted):
+    """
+    Test a basic game round.
+    """
+    my_game = BasicGame.MyGame(players=[p_bob, p_chris, p_ted])
+    my_game.start_the_game()
+    my_game.display_player(0)
+    assert len(p_bob.hand) == 5
+    assert len(p_chris.hand) == 5
+    assert len(p_ted.hand) == 5
+    my_game.next_player()
+    assert False
+
+
+# -------------------------------------------------------
 def test_setting_cards_aside(p_bob, p_chris, p_ted):
     """
     Testing the setting cards aside action.

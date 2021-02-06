@@ -377,7 +377,7 @@ class Player:
     def start_game(self) -> None:
         self.create_deck()
         self.shuffle_deck()
-        self.draw_cards(5)
+        self.draw_cards(self.draw_size)
         self.score = 0
         self.resources = {}
         self.buys = 0
