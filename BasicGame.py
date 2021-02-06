@@ -6,7 +6,7 @@ To get practice with it.
 """
 
 import random
-from typing import List, Tuple, Set, Dict, Union
+from typing import List, Dict, Union
 
 """
 More Notes!!!!
@@ -194,13 +194,20 @@ def selection_deck() -> List[List[Union[Card, str]]]:
 class Player:
 
     def __init__(self, player_number: int = None,
-                 player_name: str = None, color: str = None) -> None:
+                 player_name: str = None, color: str = None, pronoun: str = "he") -> None:
         self.number = player_number
         self.name = player_name
         self.color = color
         self.score = 0
+        self.pronoun = pronoun
+        if self.pronoun == "he":
+            self.owner_pronoun = "his"
+        elif self.pronoun == "she":
+            self.owner_pronoun = "her"
+        elif self.pronoun == "it":
+            self.owner_pronoun = "its"
         self.turn_order = None
-        self.cards, self.hand, self.deck, self.discard, self.set_aside = [], [], [], [], []
+        self.cards, self.hand, self.deck, self.graveyard, self.set_aside, self.discards = [], [], [], [], [], []
         self.buys = 1
         self.actions = 1
         self.coins = 0
@@ -212,11 +219,25 @@ class Player:
             self.game = None
         # self.create_deck()
 
+    def organize_discards(self):
+        print("ORGANIZE THE CARDS!")
+        if self.game:
+            self.game.game_log.append(f"{self.name} is organizing {self.owner_pronoun} discarded cards.")
+
+    def discards_to_graveyard(self):
+        # reorder the discards.
+        self.organize_discards()
+        # Put the discards on top of the GraveYard
+        for card in self.discards:
+            self.graveyard.append(self.discards.pop(0))
+
     def increase_score(self, amount: int) -> None:
         self.score += amount
+        self.game.game_log.append(f"{self.name}'s score has increased by {amount} to {self.score}.")
 
     def decrease_score(self, amount: int) -> None:
         self.score -= amount
+        self.game.game_log.append(f"{self.name}'s score has decreased by {amount} to {self.score}.")
 
     def create_deck(self) -> None:
         self.cards = []
@@ -231,6 +252,8 @@ class Player:
                 if card[0].name == "Estate":
                     self.cards.extend([card[0] for _ in range(3)])
         self.deck = self.cards.copy()
+        if self.game:
+            self.game.game_log.append(f"{self.name}'s deck has been created.")
 
     def draw_cards(self, number) -> None:
         try:
@@ -255,7 +278,7 @@ class Player:
         if number > len(self.hand):
             number = len(self.hand)
         for _ in range(number):
-            self.discard.append(self.hand.pop(0))
+            self.discards.append(self.hand.pop(0))
 
     def discard_to_deck(self) -> None:
         """
@@ -263,9 +286,9 @@ class Player:
         """
         # Adding a SHUFFLE here in the stupid case I don't shuffle later.
         # SHOULD this be needed, no, but more shuffling is better than NO shuffling!
-        random.shuffle(self.discard)
-        for _ in range(len(self.discard)):
-            self.deck.append(self.discard.pop(0))
+        random.shuffle(self.graveyard)
+        for _ in range(len(self.graveyard)):
+            self.deck.append(self.graveyard.pop(0))
 
     def shuffle_deck(self) -> None:
         """
@@ -283,6 +306,8 @@ class Player:
             if str(self.hand[number].card_type) == "Action" or \
                     str(self.hand[number].card_type) == "Action Attack":
                 self.play_area["cards"].append(self.hand.pop(number))
+                if self.game:
+                    self.game.game_log.append(f"""{self.name} plays card {self.play_area['cards'][-1]}.""")
             else:
                 raise AttributeError("That card is not playable!")
 
@@ -292,24 +317,35 @@ class Player:
     def gain_coins(self) -> None:
         for card in self.hand:
             self.coins += card.value
+            if self.game:
+                self.game.game_log.append(f"{self.name}'s coins are now {self.coins}.")
 
     def gain_card(self, card: Card, where: str = "discard") -> None:
         if where == "discard":
-            self.discard.append(self.game.decks[card][1].pop(0))
+            self.graveyard.append(self.game.decks[str(card)][1].pop(0))
+            if self.game:
+                self.game.game_log.append(f"{self.name}' gained card {str(card)}.")
         elif where == "hand":
-            self.hand.append(self.game.decks[card][1].pop(0))
+            self.hand.append(self.game.decks[str(card)][1].pop(0))
+            if self.game:
+                self.game.game_log.append(f"{self.name}' gained card {str(card)} to their hand.")
 
     def buy_card(self, card: Card) -> None:
         if self.coins >= card.cost and self.buys >= 1:
             self.gain_card(card)
             self.buys -= 1
             self.coins -= card.cost
+            if self.game:
+                self.game.game_log.append(f"{self.name} bought card {str(card)} for {card.cost}.")
         else:
             raise ValueError("You do not have enough coins to buy that card!")
 
     def clean_up(self) -> None:
+        # THIS NEEDS TO BE WORKED ON... SO MUCH TO DO HERE... UGH...
+        # IT NEEDS to
         for _ in range(len(self.play_area["cards"])):
-            self.discard.append(self.play_area["cards"].pop(0))
+            self.graveyard.append(self.play_area["cards"].pop(0))
+        self.discard_cards()
 
     def trash_card(self, card_number) -> None:
         self.game.decks["Trash"][1].append(self.hand.pop(card_number))
@@ -329,6 +365,22 @@ class Player:
     def __repr__(self) -> str:
         return f'Player(number{self.number}, my_name={self.name}, color={self.color})'
 
+    def card_hand_to_aside(self, card_number) -> None:
+        self.set_aside.append(self.hand.pop(card_number))
+
+    def card_aside_to_hand(self, card_number) -> None:
+        self.hand.append(self.set_aside.pop(card_number))
+
+    def start_game(self) -> None:
+        self.create_deck()
+        self.shuffle_deck()
+        self.draw_cards(5)
+        self.score = 0
+        self.resources = {}
+        self.buys = 0
+        self.play_area = {"cards": [], "resources": {}}
+        self.coins = 0
+
 
 class GameBoard:
     def __init__(self, name=None) -> None:
@@ -337,7 +389,9 @@ class GameBoard:
 
 
 class MyGame:
-    def __init__(self, choices: List[str] = None, players: List[Player] = None) -> None:
+    def __init__(self, choices: List = None, players: List[Player] = None) -> None:
+        self.game_log = []
+
         if players is None:
             self.players = [Player(1, "Bob", "Red"), Player(2, "Chris", "Blue")]
         else:
@@ -371,12 +425,10 @@ class MyGame:
         self.active_player = self.first_player
         self.decks = self.setup_decks(self.card_choices)
         self.resources = {}
-        # self.setup_decks()
-        # self.discard = []
-        self.game_log = []
 
         self.game_board = GameBoard("Game")
         self.mark_active_player()
+        self.game_log.append("Game Start!")
 
     def __repr__(self) -> str:
         return f"MyGame({self.players})"
@@ -398,20 +450,38 @@ class MyGame:
         for player in self.players:
             if player == self.players[self.active_player]:
                 player.is_active_player = True
-                player.actions = 1
-                player.buys = 1
             else:
                 player.is_active_player = False
+        self.game_log.append(f"It is {self.players[self.active_player].name}'s turn.")
+
+    def setup_turn(self):
+        for player in self.players:
+            if player.is_active_player:
+                player.actions = 1
+                player.buys = 1
+                player.coins = 0
+                self.game_log.append(f"""{player.name} has {player.actions} actions and {player.buys} buys.""")
+
+    def end_turn(self):
+        for player in self.players:
+            if player.is_active_player:
+                player.actions = 0
+                player.buys = 0
+                player.coins = 0
+                player.clean_up()
+                self.game_log.append(f"""{player.name} turn has ended.""")
 
     def next_player(self) -> None:
+        self.end_turn()
         self.active_player = (self.active_player + 1) % len(self.players)
         self.mark_active_player()
+        self.setup_turn()
 
     def display_player(self, player) -> str:
         return f'Player:   {self.players[player].name}\n' \
                f'DrawPile: {self.players[player].deck}\n' \
                f'Hand:     {self.players[player].hand}\n' \
-               f'Discard:  {self.players[player].discard}\n' \
+               f'Discard:  {self.players[player].graveyard}\n' \
                f'PlayArea: {self.players[player].play_area}'
 
     def display_board(self) -> str:
@@ -427,21 +497,18 @@ class MyGame:
                          f'                                   ')
         current_max = 0
         current_min = 10
-        print(self.card_choices)
         for b in self.card_choices:
-            print(b[0].cost)
             if b[0].cost > current_max:
                 current_max = b[0].cost
             if b[0].cost < current_min:
                 current_min = b[0].cost
-        print(current_min, current_max)
         my_answer = {}
         for value in range(current_min, current_max + 1):
             my_answer[value] = f""
             for card in self.card_choices:
                 if card[0].cost == value:
-                    my_answer[value] += f'{str(len(self.decks[card[0].name][1]))}{str(card[0].name)}({str(card[0].cost)})  \t'
-        print(my_answer)
+                    my_answer[value] += f'{str(len(self.decks[card[0].name][1]))}' \
+                                        f'{str(card[0].name)}({str(card[0].cost)})  \t'
 
         # current_string = my_string[0] + "\n" + my_string[1]
         current_string = ""
@@ -455,6 +522,13 @@ class MyGame:
             the_log += current_log
         return the_log
 
+    def start_the_game(self):
+        for player in self.players:
+            player.start_game()
+            self.mark_active_player()
+            self.setup_turn()
+
+
 
 def my_method(s):
     return s
@@ -463,19 +537,28 @@ def my_method(s):
 def main() -> None:
     my_choice = ["Cellar", "Remodel", "Moneylender", "Militia", "Village",
                  "Woodcutter", "Moat", "Feast", "Chapel", "Chancellor"]
-    my_board = MyGame(my_choice)
+    ted = Player(1, "Ted", "Red")
+    chris = Player(2, "Chris", "Blue")
+    my_board = MyGame(my_choice, [ted, chris])
+    my_board.start_the_game()
+    my_board.next_player()
+    my_board.next_player()
     print(my_board.players[0].number)
     print(my_board.decks)
     print(my_board.decks["Trash"])
-    print(repr(my_board.players))
     print(my_board.players)
-    my_card = Card("Copper", "Treasure")
     # my_board.populate_deck()
     for card in my_board.decks:
         print(card)
-    print(my_card)
     print("ABC")
+    print(f"""PLAYER BOARD:{my_board.display_player(0)}""")
     print(my_board.display_board())
+    chris.increase_score(2)
+    chris.decrease_score(2)
+    my_board.players[0].increase_score(1)
+    my_board.players[0].decrease_score(1)
+    for my_log in my_board.game_log:
+        print(my_log)
 
 
 if __name__ == "__main__":

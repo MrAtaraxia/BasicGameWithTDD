@@ -9,6 +9,68 @@ I do like doing TDD!
 I don't know the whole "do it with someone else" mentality though.
 I will have to look into that more.
 
+2020.02.04 - Currently I have added all return typing.
+THAT took a bit because of the annoyances of Lists and the requirement for Union for them.
+I have added a basic log to this as well.
+It is not everywhere yet but I will work on putting it in more places.
+Yep
+I might also want to add time to that to see WHEN certain things happened.
+But we will see how THAT goes.
+ALSO I did modify things to adjust how the DECKS were setup
+The reason for the adjustment was I noticed that Trash, which starts empty didn't function
+the same way as the others, gave an error, because it was empty.
+So I could have just fixed trash, BUT then when those piles were emptied it would cause issues.
+SO instead I made it so it references a 'default' card that is in [0] now and the ones that are
+actually given out are in [1] instead. ALSO it has the 'default' size in [0] as well.
+They are MOSTLY static, BUT they are getting eval 'd as they go in so they CAN be calculated
+at runtime!!! I liked that one. It IS causing different issues, the method that imports
+KEEPS telling me it wants to be made a STATIC method because there is no self in it
+BUT the methods that are getting eval 'd DO have self's defined, for the player count
+SO it is not liking that.
+I THINK I getting close to a version of this that actually RUNS...
+
+I want to look into what makes a 'good' prototype.
+
+So I want to implement Log more
+I want to implement the ACTUAL start of the game loop?
+- Which will require the content of what I want displayed for each loop...
+- That will take a bit.
+- Mostly to figure out how I want that whole thing organized.
+- Or do I just want to make it another function like I have for my current displays?
+So I can do it THEN implement it?
+
+I am soon getting to the point where, if I was GOOD at GUI things, it would be easier to do in a GUI.
+
+I can't tell if I just find, my current method of using TDD or starting with backend or whatever,
+BUt I find doing this, relaxing and fun.
+
+Compared to when I started from the front end last time, without TDD... ... yeah that was painful
+IT WAS satisfying to actually get things working, but it was PAINFUL to get them to that point though.
+
+I will have to see how I am able to COMBINE, hopefully, these 2 together at SOME point
+to make it so this has a GUI... HOPEFULLY I will figure out a BETTER way to do front end.
+
+OH and based on what I read before, about how being pretty makes things more intuitive or whatever...
+I think there can be pretty things that are NOT intuitive as well.
+Pretty but doesn't do ANYTHING like what you want it to do.
+I will need to look into that more, to see if it was more about streamlining things
+removing all the things that are interesting but not normally USEFUL.
+or whatever.
+
+Its pretty, it doesn't do anything but it's pretty.
+vs
+It does something, no the prettiest but it gets something done.
+
+OH I should probably setup more tomatoes as well.
+I keep forgetting to tomato this...
+yeah...
+I need to actually TRY for a WEEK, ONLY work during tomatoes
+Or NEED to have a desired number of tomatoes done at the end of the week.
+
+How will I want to enforce that? IDK...
+
+
+
 """
 
 import pytest
@@ -43,14 +105,31 @@ def p_chris():
 
 
 @pytest.fixture
-def game_for_testing(p_bob, p_chris):
+def p_ted():
     """
-    Ok So this will be used as a general game thing.
-    Would bob be modifiable from p_bob
-    while using this or not... hmmm...
-    I will have to look into that more later.
+    This is BOB. He is a player of the game.
+    Does THIS docstring get shown?
+    YES yes it does!
     """
-    game = BasicGame.MyGame(["Bridge"], [p_bob, p_chris])
+    ted = BasicGame.Player(30, "ted", "green")
+    return ted
+
+
+@pytest.fixture
+def game_2_p(p_bob, p_chris):
+    """
+    2 Player Game. Not sure if I want this as a fixture or not.
+    """
+    game = BasicGame.MyGame(players=[p_bob, p_chris])
+    return game
+
+
+@pytest.fixture
+def game_3_p(p_bob, p_chris, p_ted):
+    """
+    3 Player Game. Not sure if I want this as a fixture or not.
+    """
+    game = BasicGame.MyGame(players=[p_bob, p_chris, p_ted])
     return game
 
 
@@ -172,7 +251,8 @@ def test_game_deck():
 
 
 # -------------------------------------------------------
-def test_player_score_actions(p_bob):
+def test_player_score_actions(p_bob, p_chris):
+    my_game = BasicGame.MyGame(players=[p_bob, p_chris])
     p_bob.increase_score(5)
     assert p_bob.score == 5
     p_bob.decrease_score(5)
@@ -180,7 +260,7 @@ def test_player_score_actions(p_bob):
 
 
 # -------------------------------------------------------
-def test_player_card_movements(p_bob):
+def test_player_card_movements(p_bob, p_chris, p_ted):
     """
     Testing all of the card movements that should be allowed by a player.
     Well there are special things like pass a card left/right.
@@ -201,42 +281,60 @@ def test_player_card_movements(p_bob):
 
     assert len(p_bob.hand) == 2
     assert len(p_bob.deck) == 8
-    assert len(p_bob.discard) == 0
+    assert len(p_bob.graveyard) == 0
     p_bob.discard_cards(1)
     assert len(p_bob.hand) == 1
     assert len(p_bob.deck) == 8
-    assert len(p_bob.discard) == 1
+    assert len(p_bob.graveyard) == 1
     p_bob.discard_to_deck()
     assert len(p_bob.hand) == 1
     assert len(p_bob.deck) == 9
-    assert len(p_bob.discard) == 0
-    my_game = BasicGame.MyGame([], [p_bob])
-    p_bob.gain_card("Cellar", "hand")
+    assert len(p_bob.graveyard) == 0
+    my_game = BasicGame.MyGame(players=[p_bob, p_chris, p_ted])
+    p_bob.gain_card(BasicGame.Card("Cellar", "Action"), "hand")
     p_bob.play_card(1)  # Card # not # of cards
+    # Make sure you can not play a card that is not an action.
     with pytest.raises(AttributeError) as exc_info:
         p_bob.play_card(0)  # Card # not # of cards
     assert exc_info.type is AttributeError
     assert len(p_bob.hand) == 1
     assert len(p_bob.deck) == 9
-    assert len(p_bob.discard) == 0
+    assert len(p_bob.graveyard) == 0
     assert len(p_bob.play_area["cards"]) == 1
     p_bob.clean_up()
     assert len(p_bob.hand) == 1
     assert len(p_bob.deck) == 9
-    assert len(p_bob.discard) == 1
+    assert len(p_bob.graveyard) == 1
     assert len(p_bob.play_area["cards"]) == 0
     p_bob.discard_cards(1)
     assert len(p_bob.hand) == 0
     assert len(p_bob.deck) == 9
-    assert len(p_bob.discard) == 2
+    assert len(p_bob.graveyard) == 2
     assert len(p_bob.play_area["cards"]) == 0
     p_bob.draw_cards(1)
     p_bob.trash_card(0)
     assert len(p_bob.hand) == 0
     assert len(p_bob.deck) == 8
-    assert len(p_bob.discard) == 2
+    assert len(p_bob.graveyard) == 2
     assert len(p_bob.play_area["cards"]) == 0
     assert len(my_game.decks["Trash"][1]) == 1
+
+
+# -------------------------------------------------------
+def test_setting_cards_aside(p_bob, p_chris, p_ted):
+    """
+    Testing the setting cards aside action.
+    """
+
+    my_game = BasicGame.MyGame(players=[p_bob, p_chris, p_ted])
+    p_bob.create_deck()
+    p_bob.draw_cards(5)
+    p_bob.card_hand_to_aside(0)
+    assert len(p_bob.set_aside) == 1
+    assert len(p_bob.hand) == 4
+    p_bob.card_aside_to_hand(0)
+    assert len(p_bob.set_aside) == 0
+    assert len(p_bob.hand) == 5
 
 
 # -------------------------------------------------------
@@ -261,8 +359,8 @@ def test_overdraw_card_movements(capsys, p_bob):
     """
     p_bob.draw_cards(1)
     assert capsys.readouterr().out == "You can not draw a card from an empty deck.\n"
-    #p_bob.discard_cards()
-    #assert capsys.readouterr().out == "You can not discard a card from an empty hand.\n"
+    # p_bob.discard_cards()
+    # assert capsys.readouterr().out == "You can not discard a card from an empty hand.\n"
     p_bob.play_card(0)
     assert capsys.readouterr().out == "You can not play a card from an empty hand.\n"
     assert len(p_bob.play_area["cards"]) == 0
@@ -281,16 +379,16 @@ def test_player_card_shuffling(p_bob):
 
 
 # -------------------------------------------------------
-def test_setting_up_the_cards_on_the_board(game_for_testing):
-    assert game_for_testing.game_board.name == "Game"
-    assert len(game_for_testing.decks["Copper"][1]) == 60
-    assert len(game_for_testing.decks["Silver"][1]) == 40
-    assert len(game_for_testing.decks["Gold"][1]) == 30
-    assert len(game_for_testing.decks["Estate"][1]) == 12
-    assert len(game_for_testing.decks["Duchy"][1]) == 12
-    assert len(game_for_testing.decks["Providence"][1]) == 12
-    assert len(game_for_testing.decks["Curse"][1]) == 10
-    assert len(game_for_testing.decks["Trash"][1]) == 0
+def test_setting_up_the_cards_on_the_board(game_2_p):
+    assert game_2_p.game_board.name == "Game"
+    assert len(game_2_p.decks["Copper"][1]) == 60
+    assert len(game_2_p.decks["Silver"][1]) == 40
+    assert len(game_2_p.decks["Gold"][1]) == 30
+    assert len(game_2_p.decks["Estate"][1]) == 12
+    assert len(game_2_p.decks["Duchy"][1]) == 12
+    assert len(game_2_p.decks["Providence"][1]) == 12
+    assert len(game_2_p.decks["Curse"][1]) == 10
+    assert len(game_2_p.decks["Trash"][1]) == 0
 
 
 # -------------------------------------------------------
