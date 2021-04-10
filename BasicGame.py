@@ -6,8 +6,8 @@ To get practice with it.
 """
 
 from Player import Player
-from Game import Game
-
+from Game import Game, selection_deck
+from Card import Card
 
 """
 More Notes!!!!

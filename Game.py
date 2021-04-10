@@ -27,14 +27,14 @@ def selection_deck() -> List[List[Union[Card, str]]]:
                       +2 Cards
                       ---
                       When another player plays an Attack
-                      card, you may reveal this card from your 
+                      card, you may reveal this card from your
                       hand. If you do, you are unaffected
                       by the attack.
                       """), "10"],
                  [Card("Chancellor", "Action", 3, None,
                        """
                       +2 Gold
-                      You may immediately put your 
+                      You may immediately put your
                       deck into your discard pile.
                       """), "10"],
                  [Card("Village", "Action", 3, None,
@@ -82,7 +82,7 @@ def selection_deck() -> List[List[Union[Card, str]]]:
                        """
                       Trash a card from your hand.
                       Gain a card costing up to 2 Coins more
-                      than the trashed card. 
+                      than the trashed card.
                       """), "10"],
                  [Card("Smithy", "Action", 4,
                        """self.draw_cards(3)""",
@@ -99,12 +99,12 @@ def selection_deck() -> List[List[Union[Card, str]]]:
                       """), "10"],
                  [Card("Thief", "Action - Attack", 4, None,
                        """
-                      Each other player reveals the top 
+                      Each other player reveals the top
                       2 cards of his deck.
                       If they reveal any Treasure cards,
                       they trash one of them that you choose.
-                      You may gain any or all of these 
-                      trashed cards. They discard the 
+                      You may gain any or all of these
+                      trashed cards. They discard the
                       other revealed cards.
                       """), "10"],
                  [Card("Throne Room", "Action", 4, None,
@@ -133,11 +133,13 @@ def selection_deck() -> List[List[Union[Card, str]]]:
 
 
 class Game:
-    def __init__(self, choices: List = None, players: List[Player] = None) -> None:
+    def __init__(self, choices: List = None, players: List[Player] = None)\
+            -> None:
         self.game_log = []
 
         if players is None:
-            self.players = [Player(1, "Bob", "Red"), Player(2, "Chris", "Blue")]
+            self.players = [Player(1, "Bob", "Red"),
+                            Player(2, "Chris", "Blue")]
         else:
             self.players = players
         for player in self.players:
@@ -148,8 +150,11 @@ class Game:
         if choices:
             choices = [str(x).lower() for x in choices]
         else:
-            choices = ["cellar", "remodel", "moneylender", "militia", "village",
-                       "woodcutter", "moat", "feast", "chapel", "chancellor"]
+            choices = ["cellar", "remodel",
+                       "moneylender", "militia",
+                       "village", "woodcutter",
+                       "moat", "feast",
+                       "chapel", "chancellor"]
         for card in my_deck:
             if card[0].name.lower() in choices:
                 card_choices.append(card)
@@ -157,12 +162,17 @@ class Game:
             self.card_choices = card_choices
         else:
             card_choices = []
-            choices = ["Cellar", "Remodel", "Moneylender", "Militia", "Village",
-                       "Woodcutter", "Moat", "Feast", "Chapel", "Chancellor"]
+            choices = ["Cellar", "Remodel",
+                       "Moneylender", "Militia",
+                       "Village", "Woodcutter",
+                       "Moat", "Feast",
+                       "Chapel", "Chancellor"]
             for card in my_deck:
                 if card[0].name.lower() in choices:
                     print(card[0], card[1])
-                    card_choices.append([card, [card[0] for _ in range(eval("10"))]])
+                    card_choices.append([card,
+                                         [card[0] for _ in
+                                          range(eval("10"))]])
             self.card_choices = card_choices
 
         self.first_player = 0
@@ -177,14 +187,19 @@ class Game:
     def __repr__(self) -> str:
         return f"MyGame({self.players})"
 
-    def setup_decks(self, card_choices) -> Dict[str, Union[List[List[Union[Card, str]]], List[Card]]]:
+    def setup_decks(self, card_choices) -> \
+            Dict[str,
+                 Union[List[List[Union[Card, str]]],
+                       List[Card]]]:
         current_deck = {}
         default_deck = default_decks()
         for cards in card_choices:
             print(cards)
-            current_deck[str(cards[0])] = [cards, [cards[0] for _ in range(eval(cards[1]))]]
+            current_deck[str(cards[0])] = \
+                [cards, [cards[0] for _ in range(eval(cards[1]))]]
         for cards in default_deck:
-            current_deck[str(cards[0])] = [cards, [cards[0] for _ in range(eval(cards[1]))]]
+            current_deck[str(cards[0])] = \
+                [cards, [cards[0] for _ in range(eval(cards[1]))]]
         return current_deck
 
     def mark_active_player(self) -> None:
@@ -196,7 +211,9 @@ class Game:
                 player.is_active_player = True
             else:
                 player.is_active_player = False
-        self.game_log.append(f"It is {self.players[self.active_player].name}'s turn.")
+        self.game_log.\
+            append(f"It is "
+                   f"{self.players[self.active_player].name}'s turn.")
 
     def setup_turn(self):
         for player in self.players:
@@ -204,7 +221,9 @@ class Game:
                 player.actions = 1
                 player.buys = 1
                 player.coins = 0
-                self.game_log.append(f"""{player.name} has {player.actions} actions and {player.buys} buys.""")
+                self.game_log.append(f"{player.name} "
+                                     f"has {player.actions} "
+                                     f"actions and {player.buys} buys.")
 
     def end_turn(self):
         for player in self.players:
@@ -231,14 +250,22 @@ class Game:
 
     def display_board(self) -> str:
         my_string = []
-        my_string.append(f'{len(self.decks["Copper"][1])}Copper({self.decks["Copper"][0][0].cost})  '
-                         f'{len(self.decks["Silver"][1])}Silver({self.decks["Silver"][0][0].cost})  '
-                         f'{len(self.decks["Gold"][1])}Gold({self.decks["Gold"][0][0].cost})       ')
+        my_string.append(f'{len(self.decks["Copper"][1])}'
+                         f'Copper({self.decks["Copper"][0][0].cost})  '
+                         f'{len(self.decks["Silver"][1])}'
+                         f'Silver({self.decks["Silver"][0][0].cost})  '
+                         f'{len(self.decks["Gold"][1])}'
+                         f'Gold({self.decks["Gold"][0][0].cost})       ')
 
-        my_string.append(f'{len(self.decks["Estate"][1])}Estate ({self.decks["Estate"][0][0].cost})'
-                         f' {len(self.decks["Duchy"][1])}Duchy({self.decks["Duchy"][0][0].cost}) '
-                         f'  {len(self.decks["Providence"][1])}Providence({self.decks["Providence"][0][0].cost}) ')
-        my_string.append(f' {len(self.decks["Trash"][1])}{self.decks["Trash"][0][0].name}'
+        my_string.append(f'{len(self.decks["Estate"][1])}'
+                         f'Estate ({self.decks["Estate"][0][0].cost})'
+                         f' {len(self.decks["Duchy"][1])}'
+                         f'Duchy({self.decks["Duchy"][0][0].cost}) '
+                         f'  {len(self.decks["Providence"][1])}'
+                         f'Providence('
+                         f'{self.decks["Providence"][0][0].cost}) ')
+        my_string.append(f' {len(self.decks["Trash"][1])}'
+                         f'{self.decks["Trash"][0][0].name}'
                          f'                                   ')
         current_max = 0
         current_min = 10
@@ -249,15 +276,17 @@ class Game:
                 current_min = b[0].cost
         my_answer = {}
         for value in range(current_min, current_max + 1):
-            my_answer[value] = f""
+            my_answer[value] = ""
             for card in self.card_choices:
                 if card[0].cost == value:
-                    my_answer[value] += f'{str(len(self.decks[card[0].name][1]))}' \
-                                        f'{str(card[0].name)}({str(card[0].cost)})  \t'
+                    my_answer[value] += \
+                        f'{str(len(self.decks[card[0].name][1]))}' \
+                        f'{str(card[0].name)}({str(card[0].cost)})  \t'
 
         # current_string = my_string[0] + "\n" + my_string[1]
         current_string = ""
-        for my_number, value in enumerate(range(current_min, current_max + 1)):
+        for my_number, value in enumerate(range(current_min,
+                                                current_max + 1)):
             current_string += my_string[my_number] + my_answer[value] + "\n"
         return current_string
 

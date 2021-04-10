@@ -9,9 +9,13 @@ from Card import Card, default_decks
 
 
 class Player:
-
-    def __init__(self, player_number: int = None,
-                 player_name: str = None, color: str = None, pronoun: str = "he") -> None:
+    def __init__(
+        self,
+        player_number: int = None,
+        player_name: str = None,
+        color: str = None,
+        pronoun: str = "he",
+    ) -> None:
         self.number = player_number
         self.name = player_name
         self.color = color
@@ -26,7 +30,14 @@ class Player:
         elif self.pronoun == "it":
             self.owner_pronoun = "its"
         self.turn_order = None
-        self.cards, self.hand, self.deck, self.graveyard, self.set_aside, self.discards = [], [], [], [], [], []
+        (
+            self.cards,
+            self.hand,
+            self.deck,
+            self.graveyard,
+            self.set_aside,
+            self.discards,
+        ) = ([], [], [], [], [], [])
         self.buys = 1
         self.actions = 1
         self.coins = 0
@@ -41,7 +52,10 @@ class Player:
     def organize_discards(self):
         print("ORGANIZE THE CARDS!")
         if self.game:
-            self.game.game_log.append(f"{self.name} is organizing {self.owner_pronoun} discarded cards.")
+            self.game.game_log.append(
+                f"{self.name} is organizing {self.owner_pronoun} "
+                f"discarded cards."
+            )
 
     def discards_to_graveyard(self):
         # reorder the discards.
@@ -52,11 +66,15 @@ class Player:
 
     def increase_score(self, amount: int) -> None:
         self.score += amount
-        self.game.game_log.append(f"{self.name}'s score has increased by {amount} to {self.score}.")
+        self.game.game_log.append(
+            f"{self.name}'s score has increased by {amount} to {self.score}."
+        )
 
     def decrease_score(self, amount: int) -> None:
         self.score -= amount
-        self.game.game_log.append(f"{self.name}'s score has decreased by {amount} to {self.score}.")
+        self.game.game_log.append(
+            f"{self.name}'s score has decreased by {amount} to {self.score}."
+        )
 
     def create_deck(self) -> None:
         self.cards = []
@@ -105,7 +123,8 @@ class Player:
         Combines the discard pile to the deck.
         """
         # Adding a SHUFFLE here in the stupid case I don't shuffle later.
-        # SHOULD this be needed, no, but more shuffling is better than NO shuffling!
+        # SHOULD this be needed, no, but more shuffling
+        # is better than NO shuffling!
         random.shuffle(self.graveyard)
         for _ in range(len(self.graveyard)):
             self.deck.append(self.graveyard.pop(0))
@@ -119,7 +138,8 @@ class Player:
 
     def play_card(self, number: int) -> None:
         """
-        :param number: the number of the location of the card that is being played.
+        :param number: the number of the location of the
+        card that is being played.
         """
         try:
             # print(self.hand[number].card_type)
@@ -127,7 +147,10 @@ class Player:
                     str(self.hand[number].card_type) == "Action Attack":
                 self.play_area["cards"].append(self.hand.pop(number))
                 if self.game:
-                    self.game.game_log.append(f"""{self.name} plays card {self.play_area['cards'][-1]}.""")
+                    self.game.game_log.append(
+                        f"{self.name} plays card "
+                        f"{self.play_area['cards'][-1]}."
+                    )
             else:
                 raise AttributeError("That card is not playable!")
 
@@ -138,17 +161,21 @@ class Player:
         for card in self.hand:
             self.coins += card.value
             if self.game:
-                self.game.game_log.append(f"{self.name}'s coins are now {self.coins}.")
+                self.game.game_log.append(f"{self.name}'s "
+                                          f"coins are now {self.coins}.")
 
     def gain_card(self, card: Card, where: str = "discard") -> None:
         if where == "discard":
             self.graveyard.append(self.game.decks[str(card)][1].pop(0))
             if self.game:
-                self.game.game_log.append(f"{self.name}' gained card {str(card)}.")
+                self.game.game_log.append(f"{self.name}' gained "
+                                          f"card {str(card)}.")
         elif where == "hand":
             self.hand.append(self.game.decks[str(card)][1].pop(0))
             if self.game:
-                self.game.game_log.append(f"{self.name}' gained card {str(card)} to their hand.")
+                self.game.game_log.append(
+                    f"{self.name}' gained card {str(card)} to their hand."
+                )
 
     def buy_card(self, card: Card) -> None:
         if self.coins >= card.cost and self.buys >= 1:
@@ -156,9 +183,12 @@ class Player:
             self.buys -= 1
             self.coins -= card.cost
             if self.game:
-                self.game.game_log.append(f"{self.name} bought card {str(card)} for {card.cost}.")
+                self.game.game_log.append(
+                    f"{self.name} bought card {str(card)} for {card.cost}."
+                )
         else:
-            raise ValueError("You do not have enough coins to buy that card!")
+            raise ValueError("You do not have enough "
+                             "coins to buy that card!")
 
     def clean_up(self) -> None:
         # THIS NEEDS TO BE WORKED ON... SO MUCH TO DO HERE... UGH...
@@ -180,10 +210,11 @@ class Player:
         return hash(self.name)
 
     def __str__(self) -> str:
-        return f'Player:{self.name}'
+        return f"Player:{self.name}"
 
     def __repr__(self) -> str:
-        return f'Player(number{self.number}, my_name={self.name}, color={self.color})'
+        return f"Player(number{self.number}, my_name={self.name}, " \
+               f"color={self.color})"
 
     def card_hand_to_aside(self, card_number) -> None:
         self.set_aside.append(self.hand.pop(card_number))
