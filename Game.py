@@ -133,8 +133,7 @@ def selection_deck() -> List[List[Union[Card, str]]]:
 
 
 class Game:
-    def __init__(self, choices: List = None, players: List[Player] = None)\
-            -> None:
+    def __init__(self, choices: List = None, players: List[Player] = None) -> None:
         self.game_log = []
 
         if players is None:
